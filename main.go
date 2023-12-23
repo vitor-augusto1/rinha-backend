@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -34,13 +35,34 @@ type Person struct {
 
 var People = make(map[uuid.UUID]Person)
 
-func nickHasAlreadyBeenTaken (newPerson *Person) bool {
+func nickHasAlreadyBeenTaken (newPerson *Person) error {
   for _, v := range People {
     if v.Nick == newPerson.Nick {
-      return true
+      return errors.New("Nick has already been taken.")
     }
   }
-  return false
+  return nil
+}
+
+func personHasValidStringLength (newPerson *Person, w http.ResponseWriter) error {
+  maxNameFieldLength := 100
+  maxNickFieldLength := 32
+  maxStackFieldLength := 32
+
+  if len(newPerson.Name) > maxNameFieldLength {
+    return errors.New("Name field length must be less than 100 characters.")
+  }
+
+  if len(newPerson.Nick) > maxNickFieldLength {
+    return errors.New("Nick field length must be less than 100 characters.")
+  }
+
+  for _, stack := range newPerson.Stack {
+    if len(stack) > maxStackFieldLength {
+      return errors.New("Stack field length must be less than 100 characters.")
+    } 
+  }
+  return nil
 }
 
 func createNewPerson(w http.ResponseWriter, r *http.Request) {
@@ -64,9 +86,16 @@ func createNewPerson(w http.ResponseWriter, r *http.Request) {
       return
     }
   }
-  if nickHasAlreadyBeenTaken(&newPerson) {
+  err = personHasValidStringLength(&newPerson, w)
+  if err != nil {
+    w.WriteHeader(http.StatusBadRequest)
+    w.Write([]byte(err.Error()))
+    return
+  }
+  err = nickHasAlreadyBeenTaken(&newPerson)
+  if err != nil {
     w.WriteHeader(http.StatusUnprocessableEntity)
-    w.Write([]byte("Nick has already been taken."))
+    w.Write([]byte(err.Error()))
     return
   }
   newPerson.Id, _ = uuid.NewV7()
