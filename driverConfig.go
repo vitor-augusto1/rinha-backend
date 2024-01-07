@@ -6,7 +6,7 @@ import (
 
 const PostgresDriver = "postgres"
 
-const Host = "localhost"
+const Host = "172.18.0.2"
 
 const Port = "5432"
 
