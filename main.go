@@ -169,5 +169,5 @@ func main() {
 	r.Get("/pessoas/{id}", getPersonById)
 	r.Get("/contagem-pessoas", getPeopleCount)
 
-	http.ListenAndServe(":9999", r)
+	http.ListenAndServe(":8080", r)
 }
