@@ -13,6 +13,7 @@ import (
 )
 
 var database Repository
+
 func init() {
   repository := &Repository{}
   var err error
